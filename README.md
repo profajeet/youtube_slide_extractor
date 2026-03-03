@@ -177,8 +177,8 @@ sudo apt-get install -y ffmpeg libgl1 libglib2.0-0
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-org/youtube-slide-extractor.git
-cd youtube-slide-extractor
+git clone https://github.com/your-org/youtube_slide_extractor
+cd youtube_slide_extractor
 ```
 
 ### 2. Create and activate a virtual environment
@@ -864,8 +864,8 @@ When any pipeline stage raises an exception, the job transitions to
 ### Setup for development
 
 ```bash
-git clone https://github.com/your-org/youtube-slide-extractor.git
-cd youtube-slide-extractor
+git clone https://github.com/your-org/youtube_slide_extractor
+cd youtube_slide_extractor
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
