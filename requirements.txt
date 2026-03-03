@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+pydantic
+yt-dlp
+opencv-python-headless
+Pillow
+scikit-image
+numpy
+reportlab
+pytest
+pytest-asyncio
+httpx
