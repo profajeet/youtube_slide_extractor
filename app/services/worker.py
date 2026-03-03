@@ -11,13 +11,12 @@ from app.core.config import settings
 from app.models.job import JobRecord, JobStatus, JobStage
 from app.services.job_store import job_store
 from app.services import extractor
-from app.utils.file_utils import temp_workdir
+from app.utils.file_utils import temp_workdir,  slugify
 
 log = logging.getLogger(__name__)
 
 
 async def run_job(record: JobRecord) -> None:
-    """Entrypoint for BackgroundTasks."""
     loop = asyncio.get_event_loop()
 
     def progress(pct: int, stage: str) -> None:
@@ -29,13 +28,20 @@ async def run_job(record: JobRecord) -> None:
     await job_store.update(record)
 
     try:
-        output_pdf = settings.OUTPUT_DIR / f"{record.job_id}.pdf"
-
         with temp_workdir() as work_dir:
-            # Run blocking work in a thread pool so the event loop stays free
-            video = await loop.run_in_executor(
+            # download_video now returns (path, title)
+            video, title = await loop.run_in_executor(
                 None, extractor.download_video, record.youtube_url, work_dir, progress
             )
+
+            # Store title on record immediately so polling shows it early
+            record.video_title = title
+            await job_store.update(record)
+
+            # Build a safe filename from the title, keep job_id as suffix for uniqueness
+            safe_title = slugify(title)
+            output_pdf = settings.OUTPUT_DIR / f"{safe_title}__{record.job_id}.pdf"
+
             frames = await loop.run_in_executor(
                 None, extractor.extract_frames, video, work_dir,
                 record.sample_interval_sec, progress
@@ -54,7 +60,7 @@ async def run_job(record: JobRecord) -> None:
         record.slide_count = slide_count
         record.pdf_path = str(output_pdf)
         record.completed_at = datetime.now(timezone.utc)
-        log.info("Job %s completed: %d slides", record.job_id, slide_count)
+        log.info("Job %s completed — %d slides → %s", record.job_id, slide_count, output_pdf.name)
 
     except Exception as exc:
         log.exception("Job %s failed", record.job_id)

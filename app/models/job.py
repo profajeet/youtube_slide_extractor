@@ -40,6 +40,7 @@ class JobResponse(BaseModel):
     stage: Optional[JobStage] = None
     progress_pct: int = 0
     slide_count: Optional[int] = None
+    video_title: Optional[str] = None
     error: Optional[str] = None
     created_at: datetime
     completed_at: Optional[datetime] = None
@@ -53,6 +54,7 @@ class JobRecord(BaseModel):
     stage: Optional[JobStage] = None
     progress_pct: int = 0
     slide_count: Optional[int] = None
+    video_title: Optional[str] = None
     error: Optional[str] = None
     pdf_path: Optional[str] = None
     youtube_url: str

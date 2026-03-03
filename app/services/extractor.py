@@ -23,11 +23,10 @@ ProgressCallback = Callable[[int, str], None]   # (pct, stage_name)
 
 # ── 1. Download ──────────────────────────────────────────────────────────────
 
-def download_video(url: str, work_dir: Path, on_progress: ProgressCallback) -> Path:
+def download_video(url: str, work_dir: Path, on_progress: ProgressCallback) -> tuple[Path, str]:
     on_progress(0, "download")
     log.info("Downloading %s", url)
 
-    video_path = work_dir / "lecture.mp4"
     ydl_opts = {
         "format": "bestvideo[ext=mp4][height<=720]/best[ext=mp4]/best",
         "outtmpl": str(work_dir / "lecture.%(ext)s"),
@@ -37,14 +36,15 @@ def download_video(url: str, work_dir: Path, on_progress: ProgressCallback) -> P
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=True)
         ext = info.get("ext", "mp4")
-        video_path = work_dir / f"lecture.{ext}"
+        title = info.get("title", "slides")          # ← capture title
 
+    video_path = work_dir / f"lecture.{ext}"
     if not video_path.exists():
         raise FileNotFoundError(f"Downloaded video missing: {video_path}")
-    log.info("Download complete: %s (%.1f MB)", video_path, video_path.stat().st_size / 1e6)
-    on_progress(25, "download")
-    return video_path
 
+    log.info("Download complete: %s | title: %s", video_path, title)
+    on_progress(25, "download")
+    return video_path, title                          # ← return tuple
 
 def _ydl_hook(d: dict, cb: ProgressCallback) -> None:
     if d.get("status") == "downloading":
